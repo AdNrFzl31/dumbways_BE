@@ -66,25 +66,6 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Non midtrans below
-
-	// data, _ = h.TransactionRepository.GetTransactionID(data.ID)
-
-	// format := "2006-01-02"
-
-	// transactionResponse := transactiondto.TransactionResponse{
-	// 	StartDate: data.StartDate.Format(format),
-	// 	DueDate:   data.DueDate.Format(format),
-	// 	User:      data.User,
-	// 	Status:    data.Status,
-	// 	Price:     data.Price,
-	// }
-
-	// w.WriteHeader(http.StatusOK)
-	// response := dto.SuccessResult{Status: "success", Data: transactionResponse}
-	// json.NewEncoder(w).Encode(response)
-
-	// Midtrans
 	DataSnap, _ := h.TransactionRepository.GetTransactionID(data.ID)
 
 	var s = snap.Client{}

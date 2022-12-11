@@ -6,6 +6,7 @@ import (
 	"dumbsound/models"
 	"dumbsound/repositories"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/gorilla/mux"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
 )
@@ -129,7 +131,10 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 	fraudStatus := notificationPayload["fraud_status"].(string)
 	orderID := notificationPayload["order_id"].(string)
 
-	transaction, _ := h.TransactionRepository.GetTransactionMidtrans(orderID)
+	IDtrans, _ := strconv.Atoi(orderID)
+
+	transaction, _ := h.TransactionRepository.GetTransactionMidtrans(IDtrans)
+	fmt.Println(transaction.ID)
 
 	if transactionStatus == "capture" {
 		if fraudStatus == "challenge" {
@@ -169,5 +174,62 @@ func (h *handlerTransaction) FindTransactions(w http.ResponseWriter, r *http.Req
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Status: "Success", Data: transactions}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *handlerTransaction) CancelTransaction(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	transaction, err := h.TransactionRepository.GetTransactionID(id)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		response := dto.ErrorResult{Status: "Failed", Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	transaction.Status = "Cancel"
+	data, err := h.TransactionRepository.CancelTransaction(transaction)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := dto.SuccessResult{Status: "Success", Data: data}
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *handlerTransaction) AcceptTransaction(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	transaction, err := h.TransactionRepository.GetTransactionID(id)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		response := dto.ErrorResult{Status: "Failed", Message: "Cek id Transaction => " + err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// fmt.Println(transaction.ID)
+	// fmt.Println(transaction.Status)
+
+	transaction.Status = "Success"
+	data, err := h.TransactionRepository.UpdateTransaction(transaction)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := dto.SuccessResult{Status: "Success", Data: data}
 	json.NewEncoder(w).Encode(response)
 }

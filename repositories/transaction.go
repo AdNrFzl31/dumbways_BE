@@ -13,7 +13,9 @@ type TransactionRepository interface {
 	GetTransactionID(ID int) (models.Transaction, error)
 	UpdateTransactionStatus(status string, ID int) error
 	UpdateUserSubscribe(subscribe string, ID int) error
-	GetTransactionMidtrans(ID string) (models.Transaction, error)
+	GetTransactionMidtrans(ID int) (models.Transaction, error)
+	CancelTransaction(transaction models.Transaction) (models.Transaction, error)
+	UpdateTransaction(transaction models.Transaction) (models.Transaction, error)
 }
 
 func RepositoryTransaction(db *gorm.DB) *repository {
@@ -50,7 +52,7 @@ func (r *repository) UpdateTransactionStatus(status string, ID int) error {
 
 func (r *repository) UpdateUserSubscribe(subscribe string, ID int) error {
 	var user models.User
-	r.db.First(&user, ID)
+	r.db.Preload("User").First(&user, ID)
 
 	user.Subscribe = subscribe
 	err := r.db.Save(&user).Error
@@ -58,8 +60,18 @@ func (r *repository) UpdateUserSubscribe(subscribe string, ID int) error {
 	return err
 }
 
-func (r *repository) GetTransactionMidtrans(ID string) (models.Transaction, error) {
+func (r *repository) GetTransactionMidtrans(ID int) (models.Transaction, error) {
 	var transaction models.Transaction
-	err := r.db.Preload("User").First(&transaction, ID).Error
+	err := r.db.First(&transaction, ID).Error
+	return transaction, err
+}
+
+func (r *repository) CancelTransaction(transaction models.Transaction) (models.Transaction, error) {
+	err := r.db.Save(&transaction).Error
+	return transaction, err
+}
+
+func (r *repository) UpdateTransaction(transaction models.Transaction) (models.Transaction, error) {
+	err := r.db.Save(&transaction).Error
 	return transaction, err
 }

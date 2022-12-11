@@ -13,6 +13,7 @@ func TransactionRoutes(r *mux.Router) {
 	transactionRepository := repositories.RepositoryTransaction(mysql.DB)
 	h := handlers.HandlerTransaction(transactionRepository)
 
+	r.HandleFunc("/transall", h.FindTransactions).Methods("GET")
 	r.HandleFunc("/transaction", middleware.Auth(h.CreateTransaction)).Methods("POST")
 	r.HandleFunc("/notification", middleware.Auth(h.Notification)).Methods("POST")
 }

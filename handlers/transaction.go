@@ -45,11 +45,10 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-
-	setTransID := time.Now().Unix()
+	transID := time.Now().Unix()
 
 	transaction := models.Transaction{
-		ID:        int(setTransID),
+		ID:        int(transID),
 		UserID:    userId,
 		StartDate: request.StartDate,
 		DueDate:   request.DueDate,
@@ -91,7 +90,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
-			OrderID:  strconv.Itoa(int(DataSnap.ID)),
+			OrderID:  strconv.Itoa(DataSnap.ID),
 			GrossAmt: int64(DataSnap.Price),
 		},
 		CreditCard: &snap.CreditCardDetails{
@@ -155,4 +154,20 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 		h.TransactionRepository.UpdateUserSubscribe("false", userId)
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *handlerTransaction) FindTransactions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	transactions, err := h.TransactionRepository.FindTransactions()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		response := dto.ErrorResult{Status: "Failed", Message: err.Error()}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	response := dto.SuccessResult{Status: "Success", Data: transactions}
+	json.NewEncoder(w).Encode(response)
 }

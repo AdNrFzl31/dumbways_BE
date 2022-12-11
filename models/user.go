@@ -11,7 +11,7 @@ type User struct {
 	Gender    string    `json:"gender" gorm:"type: varchar(50)"`
 	Phone     string    `json:"phone" gorm:"type: varchar(255)"`
 	Address   string    `json:"address" gorm:"type: text"`
-	Subscribe string    `json:"subcribe" gorm:"type: varchar(50)"`
+	Subscribe string    `json:"subscribe" gorm:"type: varchar(50)"`
 	CreateAt  time.Time `json:"-"`
 	UpdateAt  time.Time `json:"-"`
 }

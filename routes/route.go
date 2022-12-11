@@ -7,4 +7,5 @@ func RouteInit(r *mux.Router) {
 	UserRoutes(r)
 	MusicRoutes(r)
 	ArtistRoutes(r)
+	TransactionRoutes(r)
 }

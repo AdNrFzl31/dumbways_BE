@@ -27,23 +27,23 @@ func UploadMusic(next http.HandlerFunc) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		// setup file type filtering
-		buff := make([]byte, 512)
-		_, err = file.Read(buff)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
-			json.NewEncoder(w).Encode(response)
-			return
-		}
+		// // setup file type filtering
+		// buff := make([]byte, 512)
+		// _, err = file.Read(buff)
+		// if err != nil {
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
+		// 	json.NewEncoder(w).Encode(response)
+		// 	return
+		// }
 
-		filetype := http.DetectContentType(buff)
-		if filetype != "audio/mpeg" && filetype != "audio/mp3" {
-			w.WriteHeader(http.StatusBadRequest)
-			response := dto.ErrorResult{Status: "Failed", Message: "The provided file format is not allowed. Please upload a MP3 music"}
-			json.NewEncoder(w).Encode(response)
-			return
-		}
+		// filetype := http.DetectContentType(buff)
+		// if filetype != "audio/mp3" {
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// 	response := dto.ErrorResult{Status: "Failed", Message: "The provided file format is not allowed. Please upload a MP3 music"}
+		// 	json.NewEncoder(w).Encode(response)
+		// 	return
+		// }
 
 		_, err = file.Seek(0, io.SeekStart)
 		if err != nil {

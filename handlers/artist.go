@@ -30,6 +30,7 @@ func (h *handlerArtist) FindArtists(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

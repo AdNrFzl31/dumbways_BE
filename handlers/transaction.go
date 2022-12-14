@@ -6,7 +6,6 @@ import (
 	"dumbsound/models"
 	"dumbsound/repositories"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -47,6 +46,7 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		json.NewEncoder(w).Encode(response)
 		return
 	}
+
 	transID := time.Now().Unix()
 
 	transaction := models.Transaction{
@@ -66,14 +66,20 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	DataSnap, _ := h.TransactionRepository.GetTransactionID(data.ID)
+	DataSnap, err := h.TransactionRepository.GetTransactionID(data.ID)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err.Error())
+		return
+	}
 
 	var s = snap.Client{}
 	s.New(os.Getenv("SERVER_KEY"), midtrans.Sandbox)
 
 	req := &snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
-			OrderID:  strconv.Itoa(DataSnap.ID),
+			OrderID:  strconv.Itoa(int(DataSnap.ID)),
 			GrossAmt: int64(DataSnap.Price),
 		},
 		CreditCard: &snap.CreditCardDetails{
@@ -84,8 +90,6 @@ func (h *handlerTransaction) CreateTransaction(w http.ResponseWriter, r *http.Re
 			Email: DataSnap.User.Email,
 		},
 	}
-
-	// Run midtrans Snap
 
 	snapResp, _ := s.CreateTransaction(req)
 
@@ -105,47 +109,37 @@ func (h *handlerTransaction) Notification(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
-	userId := int(userInfo["id"].(float64))
-
 	transactionStatus := notificationPayload["transaction_status"].(string)
 	fraudStatus := notificationPayload["fraud_status"].(string)
 	orderID := notificationPayload["order_id"].(string)
 
-	IDtrans, _ := strconv.Atoi(orderID)
-
-	transaction, _ := h.TransactionRepository.GetTransactionMidtrans(IDtrans)
-	fmt.Println(transaction.ID)
-
 	if transactionStatus == "capture" {
 		if fraudStatus == "challenge" {
-			h.TransactionRepository.UpdateTransactionStatus("pending", int(transaction.ID))
-			h.TransactionRepository.UpdateUserSubscribe("false", userId)
+			h.TransactionRepository.UpdateTransactionStatus("pending", orderID)
+
 		} else if fraudStatus == "accept" {
-			h.TransactionRepository.UpdateTransactionStatus("success", int(transaction.ID))
-			h.TransactionRepository.UpdateUserSubscribe("true", userId)
+			h.TransactionRepository.UpdateTransactionStatus("success", orderID)
 		}
 
 	} else if transactionStatus == "settlement" {
-		h.TransactionRepository.UpdateTransactionStatus("success", int(transaction.ID))
-		h.TransactionRepository.UpdateUserSubscribe("true", userId)
+		h.TransactionRepository.UpdateTransactionStatus("success", orderID)
+
 	} else if transactionStatus == "deny" {
-		h.TransactionRepository.UpdateTransactionStatus("failed", int(transaction.ID))
-		h.TransactionRepository.UpdateUserSubscribe("false", userId)
+		h.TransactionRepository.UpdateTransactionStatus("failed", orderID)
+
 	} else if transactionStatus == "cancel" || transactionStatus == "expire" {
-		h.TransactionRepository.UpdateTransactionStatus("failed", int(transaction.ID))
-		h.TransactionRepository.UpdateUserSubscribe("false", userId)
+		h.TransactionRepository.UpdateTransactionStatus("failed", orderID)
+
 	} else if transactionStatus == "pending" {
-		h.TransactionRepository.UpdateTransactionStatus("pending", int(transaction.ID))
-		h.TransactionRepository.UpdateUserSubscribe("false", userId)
+		h.TransactionRepository.UpdateTransactionStatus("pending", orderID)
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *handlerTransaction) FindTransactions(w http.ResponseWriter, r *http.Request) {
+func (h *handlerTransaction) FindTransaction(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	transactions, err := h.TransactionRepository.FindTransactions()
+	transactions, err := h.TransactionRepository.FindTransaction()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		response := dto.ErrorResult{Status: "Failed", Message: err.Error()}

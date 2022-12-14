@@ -61,7 +61,7 @@ func UploadMusic(next http.HandlerFunc) http.HandlerFunc {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
-		tempFile, err := ioutil.TempFile("uploads", "music-*.mp3")
+		tempFile, err := ioutil.TempFile("upload_music", "music-*.mp3")
 		if err != nil {
 			fmt.Println(err)
 			fmt.Println("path upload error")

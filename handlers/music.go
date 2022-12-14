@@ -34,6 +34,7 @@ func (h *handlerMusic) FindMusics(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(err.Error())
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

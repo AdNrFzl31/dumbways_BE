@@ -12,6 +12,7 @@ type User struct {
 	Phone     string    `json:"phone" gorm:"type: varchar(255)"`
 	Address   string    `json:"address" gorm:"type: text"`
 	Subscribe string    `json:"subscribe" gorm:"type: varchar(50)"`
+	Image     string    `json:"image" gorm:"type: varchar(255)"`
 	CreateAt  time.Time `json:"-"`
 	UpdateAt  time.Time `json:"-"`
 }
@@ -20,7 +21,7 @@ type UserResponse struct {
 	ID       int    `json:"id"`
 	Fullname string `json:"fullname"`
 	Email    string `json:"email"`
-	Role     string `json:"-"`
+	Status   string `json:"-"`
 }
 
 func (UserResponse) TableName() string {

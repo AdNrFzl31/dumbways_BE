@@ -50,6 +50,7 @@ func (h *handlerAuth) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	user := models.User{
@@ -69,6 +70,7 @@ func (h *handlerAuth) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		response := dto.ErrorResult{Status: "Server Error", Message: err.Error()}
 		json.NewEncoder(w).Encode(response)
+		return
 	}
 
 	registerResponse := authdto.RegisterResponse{
